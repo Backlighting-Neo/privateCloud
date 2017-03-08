@@ -7,7 +7,13 @@ const fetch = require('node-fetch');
 
 const config = require('./config.js')('webhook');
 
+router.post('/webhook/spider/tjyy8', async function(context) {
+	console.log(context.request.body);
+	console.log('===========================');
+	console.log(JSON.stringify(context.request.body));
 
+	context.response.body = context.request.body.data_key;
+})
 
 app.use(logger()).use(bodyParser()).use(router.routes()).use(router.allowedMethods());
 app.listen(config.port);
