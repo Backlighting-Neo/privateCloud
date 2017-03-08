@@ -50,6 +50,8 @@ router.get('/wechat/login', async function(context) {
 router.post('/wechat/send', async function(context) {
 	let msgType = context.request.body.type;
 	let msgText = context.request.body.message;
+	console.log(context.request.body);
+
 	if(!msgType || !config.subscriptionMap[msgType]) {
 		context.response.body = {
 			"code": -10,
