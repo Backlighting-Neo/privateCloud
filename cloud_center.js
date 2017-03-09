@@ -47,9 +47,8 @@ router.get('/status', context=>{
 })
 
 router.all('*', async context=>{
-	console.log(context.request.path);
-	let service_name = context.request.path.match(/^\/cloud\/(.*)\//);
-	if(service_name == null) {
+	let service_name = context.request.path.split('/');
+	if(service_name.length === 0) {
 		context.response.body = {
 			code: -1,
 			message: '未提供服务名称'
@@ -57,22 +56,29 @@ router.all('*', async context=>{
 		return;
 	}
 
-	service_name = service_name[1];
-	console.log(service_name);
+	service_name = service_name[2];
 	if(!registerTable[service_name]) {
 		context.response.body = {
 			code: -2,
 			message: '所需要的微服务未注册'
 		}
+		console.log(`请求 ${service_name} 服务失败`);
 		return;
 	}
 
 	let service = registerTable[service_name];
 
-	var ret = await fetch(`http://localhost:${service.port}/${context.request.path.replace(/^\/cloud/, '')}`, {
-		method: context.request.method,
-		body: context.request.body
-	})
+	var ret;
+	if(context.request.method === 'GET') {
+		ret = await fetch(`http://localhost:${service.port}${context.request.path.replace(/^\/cloud/, '')}`)
+	}
+	else {
+		ret = await fetch(`http://localhost:${service.port}${context.request.path.replace(/^\/cloud/, '')}`, {
+			method: context.request.method,
+			body: context.request.body
+		})
+	}
+	
 	context.response.body = ret;
 })
 
