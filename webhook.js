@@ -1,32 +1,26 @@
+const http = require('http');
 const Koa = require('koa');
 const app = new Koa();
-const router = require('koa-router')();
+const router = require('koa-router')({
+	prefix: '/webhook'
+});
 const logger = require('koa-logger');
 const bodyParser = require('koa-bodyparser');
 const fetch = require('node-fetch');
 
 const config = require('./config.js')('webhook');
+const tjyy8Service = require('./service/tjyy8');
+const microService = require('./utils/microService');
 
-function getSpiderTjyy8TemplateMessage(url, data) {
-	var desc = data.performance_desc;
-	if(data.performance_desc.length > 100) desc = desc.substr(0, 100) + '...';
+var app_port = 0;
 
-	return (
-`【文惠卡】 新演出通知
+router.get('/watchdog', context => {
+	context.response.body = {
+		code: 0
+	}
+});
 
-[标题] ${data.performance_title}
-[剧团] ${data.performance_troupe}
-[时长] ${data.performance_duration}
-[票价] ${data.performance_price_summary}
-[剧院] ${data.performace_theatre}
-[时间] ${data.performance_time.join('\n           ')}
-
-${url}
-
-${desc}`);
-}
-
-router.post('/webhook/spider/tjyy8', async function(context) {
+router.post('/spider/tjyy8', async function(context) {
 	var {
 		url,
 		timestamp,
@@ -47,7 +41,7 @@ router.post('/webhook/spider/tjyy8', async function(context) {
 		},
 		body: JSON.stringify({
 			type: 'tjyy8_newPerformance',
-			message: getSpiderTjyy8TemplateMessage(url, data)
+			message: tjyy8Service.getTemplateMessage(url, data)
 		})
 	});
 	console.log(await res.json());
@@ -56,5 +50,10 @@ router.post('/webhook/spider/tjyy8', async function(context) {
 })
 
 app.use(logger()).use(bodyParser()).use(router.routes()).use(router.allowedMethods());
-app.listen(config.port);
-console.log('webhook service has been listened at port '+config.port);
+
+var server = http.createServer(app.callback()).listen(0, '127.0.0.1', ()=>{
+	app_port = server.address().port;
+	microService.register('webhook', app_port);
+	console.log(`webhook service has been listened at port ${app_port}`);
+});
+
