@@ -45,15 +45,15 @@ router.post('/send', async context => {
 	let msgText = context.request.body.message;
 	console.log(context.request.body);
 
-	if(!msgType || !config.subscriptionMap[msgType]) {
+	if(!msgType || !service.config.subscriptionMap[msgType]) {
 		context.response.body = {
 			"code": -10,
 			"message": "invalid message type"
 		};
 		return;
 	}
-	let subscriptionUserList = config.subscriptionMap[msgType];
-	console.log(config.subscriptionMap);
+	let subscriptionUserList = service.config.subscriptionMap[msgType];
+	console.log(service.config.subscriptionMap);
 
 	try {
 		await Promise.all(subscriptionUserList.map(nickname=>{

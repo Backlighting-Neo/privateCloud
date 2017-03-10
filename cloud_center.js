@@ -8,8 +8,10 @@ const router = require('koa-router')({
 });
 
 const WATCH_DOG_TIME = 6000;
+const SERVICE_KEY_WORD = ['register', 'status', 'config'];
 
 var registerTable = {};
+var configTable = {};
 
 setInterval(()=>{
 	Object.keys(registerTable).forEach(async service_name=>{
@@ -31,10 +33,34 @@ router.post('/register/:service_name', context=>{
 	let service_port = context.request.body.port;
 	let isUpdateServiceConfig = !!registerTable[service_name];
 
+	if(SERVICE_KEY_WORD.indexOf(service_name)>-1) {
+		context.response.body = {
+			code: -1,
+			message: `微服务注册失败，服务名不得为 ${SERVICE_KEY_WORD.join(', ')}`
+		};
+		return;
+	}
+
 	registerTable[service_name] = {
 		port: service_port,
 		errorNum: 0
 	};
+
+	let configFilePath = `./config/${service_name}.json`;
+	if(!fs.existsSync(configFilePath)) {
+		console.log(`${service_name} 服务配置文件未找到`);
+		configTable[service_name] = {};
+	}
+	else {
+		var configFileContent = fs.readFileSync(configFilePath, 'utf-8');
+		try {
+			configTable[service_name] = JSON.parse(configFileContent);
+		}
+		catch(error) {
+			console.error(`${service_name} 服务配置文件解析失败`);
+			configTable[service_name] = {};
+		}
+	}
 
 	context.response.body = {
 		code: 0,
@@ -42,6 +68,19 @@ router.post('/register/:service_name', context=>{
 	};
 
 	console.log(`${service_name} 服务注册成功，端口${service_port}`);
+})
+
+router.post('/config/:service_name', context=>{
+	let service_name = context.params.service_name;
+	let service_port = registerTable[service_name].port;
+	configTable[service_name] = Object.assign({}, configTable[service_name], context.request.body);
+	fetch(`http://localhost:${service_port}/${service_name}/config`, {
+		method: 'POST',
+		body: configTable[service_name]
+	})
+	.catch(error=>{
+		console.error(`更新 ${service_name} 服务配置失败`);
+	})
 })
 
 router.get('/status', context=>{
