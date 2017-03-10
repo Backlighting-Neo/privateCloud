@@ -7,6 +7,8 @@ const router = require('koa-router')({
 	prefix: '/cloud'
 });
 
+const WATCH_DOG_TIME = 6000;
+
 var registerTable = {};
 
 setInterval(()=>{
@@ -22,7 +24,7 @@ setInterval(()=>{
 			}
 		})
 	})
-}, 6000);
+}, WATCH_DOG_TIME);
 
 router.post('/register/:service_name', context=>{
 	let service_name = context.params.service_name;
