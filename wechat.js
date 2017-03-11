@@ -12,6 +12,7 @@ var loginUUID = '';
 var contactsMap = {};
 
 wechatBot.on('uuid', uuid => {  // 记录UUID
+	// qrcode.generate('https://login.weixin.qq.com/l/' + uuid, {small: true});
 	loginUUID = uuid;
 });
 wechatBot.on('login', () => {  // 确认登录
@@ -36,7 +37,7 @@ router.get('/login', async context => {
 	else
 		context.response.body = {
 			"code": 0,
-			"qrcode_url": 'https://login.weixin.qq.com/qrcode/' + loginUUID
+			"qrcode_url": 'https://login.weixin.qq.com/l/' + loginUUID
 		}
 });
 
