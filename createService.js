@@ -21,6 +21,7 @@ module.exports = class MicroService {
 	  this.last_watchdog_timestamp = Date.now();
 	  this.server = null;
 	  this.config = null;
+	  this.status = {};
 
 	  this._getDefaultConfig();
 	  this._addDefaultRouter();
@@ -58,11 +59,25 @@ module.exports = class MicroService {
 			}
 		});
 
+		this.router.get('/config', context => {  // 获取当前配置
+			context.response.body = {
+				code: 0,
+				data: this.config
+			};
+		})
+
 		this.router.post('/config', context => {  // 配置服务
 			this._updateConfig(context.request.body);
 			context.response.body = {
 				code: 0
 			};
+		});
+
+		this.router.get('/status', context => {  // 状态服务
+			context.response.body = {
+				code: 0,
+				data: this.status
+			}
 		})
 	}
 
@@ -83,6 +98,10 @@ module.exports = class MicroService {
 		.catch(err=>{
 			console.error(`${this.service_name} 服务注册失败`);
 		})
+	}
+
+	setStatus(newStatus) {
+		this.status = Object.assign({}, this.status, newStatus);
 	}
 
 	fetchService(url, option) {
