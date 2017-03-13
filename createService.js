@@ -22,6 +22,7 @@ module.exports = class MicroService {
 	  this.server = null;
 	  this.config = null;
 	  this.status = {};
+	  this.getStatus = null;
 
 	  this._getDefaultConfig();
 	  this._addDefaultRouter();
@@ -76,7 +77,7 @@ module.exports = class MicroService {
 		this.router.get('/status', context => {  // 状态服务
 			context.response.body = {
 				code: 0,
-				data: this.status
+				data: this.getStatus?this.getStatus():this.status
 			}
 		})
 	}
@@ -84,7 +85,7 @@ module.exports = class MicroService {
 	_checkCloudCenterStatus() {
 		if(Date.now() - this.last_watchdog_timestamp > WATCH_DOG_TIME_LIMIT) {
 			console.log('云中心已断线 正在尝试重连');
-			this._regsiter();
+			this._register();
 		}
 	}
 

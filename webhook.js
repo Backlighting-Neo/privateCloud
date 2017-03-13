@@ -24,8 +24,7 @@ router.post('/spider/tjyy8', async function(context) {
 			message: tjyy8Service.getTemplateMessage(url, data)
 		}
 	});
-	
-	console.log(res);
+	console.log(`收到神箭手tjyy8爬虫推送，Url:${url}`);
 
 	context.response.body = data_key;
 });

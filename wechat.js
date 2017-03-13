@@ -8,43 +8,48 @@ var router = service.router;
 var wechatBot = new wechat();
 wechatBot.start();
 
-var loginUUID = '';
-var contactsMap = {};
+service.status = {
+	loginUUID: '',
+	loginUsername: '',
+	wechatStatus: 'offline',
+	contactsMap: {}
+};
 
 wechatBot.on('uuid', uuid => {  // 记录UUID
 	// qrcode.generate('https://login.weixin.qq.com/l/' + uuid, {small: true});
-	loginUUID = uuid;
+	service.status.loginUUID = uuid;
 });
 wechatBot.on('login', () => {  // 确认登录
-	loginUUID = '';
+	service.status.loginUUID = '';
+	service.status.loginUsername = '';
+	service.status.wechatStatus = 'online';
 })
 wechatBot.on('contacts-updated', () => {  // 更新通讯录
-	contactsMap = {};
+	service.status.contactsMap = {};
 	wechatBot.friendList.forEach(friend => {
-		if(contactsMap[friend.nickname]) {
+		if(service.status.contactsMap[friend.nickname]) {
 			console.error(`发现重名用户 ${friend.nickname}`);
 			return;
 		}
-		contactsMap[friend.nickname] = friend.username;
+		service.status.contactsMap[friend.nickname] = friend.username;
 	})
 })
 
-router.get('/login', async context => {
-	if(!loginUUID)
+router.get('/login', context => {
+	if(!service.status.loginUUID)
 		context.response.body = {
 			"code": -1
 		}
 	else
 		context.response.body = {
 			"code": 0,
-			"qrcode_url": 'https://login.weixin.qq.com/l/' + loginUUID
+			"qrcode_url": 'https://login.weixin.qq.com/l/' + service.status.loginUUID
 		}
 });
 
 router.post('/send', async context => {
 	let msgType = context.request.body.type;
 	let msgText = context.request.body.message;
-	console.log(context.request.body);
 
 	if(!msgType || !service.config.subscriptionMap[msgType]) {
 		context.response.body = {
@@ -53,9 +58,9 @@ router.post('/send', async context => {
 		};
 		return;
 	}
-	let subscriptionUserList = service.config.subscriptionMap[msgType];
-	console.log(service.config.subscriptionMap);
 
+	let subscriptionUserList = service.config.subscriptionMap[msgType];
+	console.log(`收到[${msgType}]类型消息，推送给${subscriptionUserList.length}位联系人`);
 	try {
 		await Promise.all(subscriptionUserList.map(nickname=>{
 			let username = contactsMap[nickname];
