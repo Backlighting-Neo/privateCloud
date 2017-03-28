@@ -12,13 +12,11 @@ module.exports = {
     │    └──────────────────── 分钟 (0 - 59)
     └───────────────────────── 秒 (0 - 59, 可选)
     */
-    // default_schedule: '* * /6 * * *',
-    default_schedule: '/1 * * * * *',
+    default_schedule: '* /1 * * * *',
 
     // execute必须返回一个Promise
     execute() {
-        console.log('active');
-        return Promise.resolve();
-        // return shenjianshouService.activeCrawler(30241);
+        this.logger('active tjyy8 crawler');
+        return shenjianshouService.activeCrawler(30241);
     }
 }

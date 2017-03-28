@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "fs-extra": "^2.1.2",
     "koa": "^2.0.1",
     "koa-bodyparser": "^4.1.0",
     "koa-logger": "^2.0.1",
@@ -17,6 +18,9 @@
     "node-schedule": "^1.2.0",
     "qrcode-terminal": "^0.11.0",
     "request": "^2.80.0",
-    "wechat4u": "^0.6.10"
+    "wechat4u": "^0.6.10",
+    "winston": "^2.3.1",
+    "winston-daily-rotate-file": "^1.4.6",
+    "winston-extra": "^1.0.1"
   }
 }
