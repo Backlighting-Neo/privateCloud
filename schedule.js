@@ -21,7 +21,7 @@ service.getStatus = function() {
 }
 
 function addTask(name, cron, execute) {
-	console.log(`注册新任务[${name}] 执行cron[${cron}]`);
+	service.logger.info(`注册新任务[${name}] 执行cron[${cron}]`);
 	if(service.status.schedule[name]) {  // 如果要求新建的任务存在
 		service.status.schedule[name].task.cancel();
 		delete service.status.schedule[name];
@@ -32,7 +32,7 @@ function addTask(name, cron, execute) {
 		last_execute_result: '',
 		last_execute_status: '',
 		task: schedule.scheduleJob(cron, function(name) {
-			execute()
+			execute.apply(service)
 			.then(res=>{
 				service.status.schedule[name].last_execute_status = 'OK';
 				service.status.schedule[name].last_execute_result = res;
@@ -54,12 +54,12 @@ function removeTask(name) {
 
 service.config.list.forEach(task_name => {  // 添加默认定时任务
 	if(!fs.existsSync(`./task/${task_name}.js`)) {
-		console.error(`${task_name} 任务未找到`);
+		service.logger.error(`${task_name} 任务未找到`);
 		return;
 	}
 	let task = require(`./task/${task_name}.js`);
 	if(!task.default_schedule || !task.execute) {
-		console.error(`${task_name} 任务配置错误`);
+		service.logger.error(`${task_name} 任务配置错误`);
 		return;
 	}
 	addTask(task_name, task.default_schedule, task.execute);

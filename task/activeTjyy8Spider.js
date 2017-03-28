@@ -12,11 +12,11 @@ module.exports = {
     │    └──────────────────── 分钟 (0 - 59)
     └───────────────────────── 秒 (0 - 59, 可选)
     */
-    default_schedule: '* /1 * * * *',
+    default_schedule: '/1 * * * * *',
 
     // execute必须返回一个Promise
     execute() {
-        this.logger('active tjyy8 crawler');
+        this.logger.info('激活天津演艺网爬虫');
         return shenjianshouService.activeCrawler(30241);
     }
 }

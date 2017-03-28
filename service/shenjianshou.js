@@ -17,7 +17,7 @@ class ShenJianShou {
 	}
 
 	activeCrawler(crawler_id) {
-		let params = Object.assign({}, shenjianshou.getSign(), {
+		let params = Object.assign({}, this.getSign(), {
 			crawler_id
 		});
 		params = Object.keys(params).map(key=>`${key}=${params[key]}`).join('&');
