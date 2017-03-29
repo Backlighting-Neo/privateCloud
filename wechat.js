@@ -1,4 +1,4 @@
-const MicroService = require('./createService');
+const MicroService = require('../utils/createService');
 
 const wechat = require('wechat4u');
 

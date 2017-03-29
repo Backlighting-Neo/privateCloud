@@ -1,18 +1,26 @@
+const fs = require('fs');
 const Koa = require('koa');
 const app = new Koa();
 const logger = require('koa-logger');
 const bodyParser = require('koa-bodyparser');
 const fetch = require('./utils/fetch');
-const router = require('koa-router')({
-	prefix: '/cloud'
+const router = require('koa-router')();
+const winston_logger = require('./utils/log.js');
+
+var logger = winston_logger({
+	level: 'info',
+	fileLevel: 'info',
+	filename: path.resolve('../', 'logs', 'cloud_center'),
+	wrireFileDirName: path.resolve('../', 'logs', 'cloud_center_file_log'), //写文件的logs
 });
 
-const WATCH_DOG_TIME = 6000;
+const WATCH_DOG_TIME = 60000;
 const SERVICE_KEY_WORD = ['register', 'status', 'config'];
 
 var registerTable = {};
 var configTable = {};
 
+// 微服务看门狗
 setInterval(()=>{
 	Object.keys(registerTable).forEach(async service_name=>{
 		let service_port = registerTable[service_name].port;
@@ -28,6 +36,7 @@ setInterval(()=>{
 	})
 }, WATCH_DOG_TIME);
 
+// 注册服务
 router.post('/register/:service_name', context=>{
 	let service_name = context.params.service_name;
 	let service_port = context.request.body.port;
@@ -48,7 +57,7 @@ router.post('/register/:service_name', context=>{
 
 	let configFilePath = `./config/${service_name}.json`;
 	if(!fs.existsSync(configFilePath)) {
-		console.log(`${service_name} 服务配置文件未找到`);
+		logger.info(`${service_name} 服务配置文件未找到`);
 		configTable[service_name] = {};
 	}
 	else {
@@ -67,9 +76,10 @@ router.post('/register/:service_name', context=>{
 		message: isUpdateServiceConfig?'微服务配置更新成功':'微服务配置已注册'
 	};
 
-	console.log(`${service_name} 服务注册成功，端口${service_port}`);
+	logger.info(`${service_name} 服务注册成功，端口${service_port}`);
 })
 
+// 配置服务
 router.post('/config/:service_name', context=>{
 	let service_name = context.params.service_name;
 	let service_port = registerTable[service_name].port;
@@ -83,10 +93,16 @@ router.post('/config/:service_name', context=>{
 	})
 })
 
+// 状态服务
 router.get('/status', context=>{
 	context.response.body = registerTable;
 })
 
+router.get('/status/:service_name', context=>{
+	context.response.body = registerTable[service_name];
+})
+
+// 透明转发
 router.all('*', async context=>{
 	let service_name = context.request.path.split('/');
 	if(service_name.length === 0) {
@@ -103,7 +119,7 @@ router.all('*', async context=>{
 			code: -2,
 			message: '所需要的微服务未注册'
 		}
-		console.log(`请求 ${service_name} 服务失败`);
+		logger.info(`请求 ${service_name} 服务失败`);
 		return;
 	}
 
@@ -111,10 +127,10 @@ router.all('*', async context=>{
 
 	var ret;
 	if(context.request.method === 'GET') {
-		ret = await fetch(`http://localhost:${service.port}${context.request.path.replace(/^\/cloud/, '')}`)
+		ret = await fetch(`http://localhost:${service.port}${context.request.path}`)
 	}
 	else {
-		ret = await fetch(`http://localhost:${service.port}${context.request.path.replace(/^\/cloud/, '')}`, {
+		ret = await fetch(`http://localhost:${service.port}${context.request.path}`, {
 			method: context.request.method,
 			body: context.request.body
 		})
@@ -123,7 +139,6 @@ router.all('*', async context=>{
 	context.response.body = ret;
 })
 
-
-
 app.use(logger()).use(bodyParser()).use(router.routes()).use(router.allowedMethods());
 app.listen(3000);
+
