@@ -3,9 +3,9 @@ const Koa = require('koa');
 const router = require('koa-router');
 const koa_logger = require('koa-logger');
 const bodyParser = require('koa-bodyparser');
-const fetch = require('./utils/fetch');
+const fetch = require('../utils/fetch');
 const fs = require('fs');
-const winston_logger = require('./utils/log.js');
+const winston_logger = require('../utils/log.js');
 const path = require('path');
 
 const CHECK_CLOUD_CENTER_DURATION = 10000;
@@ -98,13 +98,14 @@ module.exports = class MicroService {
 	}
 	
 	_register() {
-		return fetch(`http://${CLOUD_CENTER_HOST}/cloud/register/${this.service_name}`, {
+		return fetch(`http://${CLOUD_CENTER_HOST}/register/${this.service_name}`, {
 			method: 'POST',
 			body: {
 				port: this.port
 			}
 		})
 		.catch(err => {
+			console.error(err);
 			logger.error(`${this.service_name} 服务注册失败`);
 		})
 	}
@@ -114,7 +115,7 @@ module.exports = class MicroService {
 	}
 	
 	fetchService(url, option) {
-		return fetch(`http://${CLOUD_CENTER_HOST}/cloud${url}`, option);
+		return fetch(`http://${CLOUD_CENTER_HOST}${url}`, option);
 	}
 	
 	start() {

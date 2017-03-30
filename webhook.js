@@ -1,4 +1,4 @@
-const MicroService = require('../utils/createService');
+const MicroService = require('./utils/createService');
 
 const tjyy8Service = require('./service/tjyy8');
 

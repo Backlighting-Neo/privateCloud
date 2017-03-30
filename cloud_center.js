@@ -1,7 +1,8 @@
 const fs = require('fs');
+const path = require('path');
 const Koa = require('koa');
 const app = new Koa();
-const logger = require('koa-logger');
+const koa_logger = require('koa-logger');
 const bodyParser = require('koa-bodyparser');
 const fetch = require('./utils/fetch');
 const router = require('koa-router')();
@@ -27,10 +28,10 @@ setInterval(()=>{
 		fetch(`http://localhost:${service_port}/${service_name}/watchdog`)
 		.catch(error=>{
 			registerTable[service_name].errorNum++;
-			console.error(`${service_name} 服务出现了问题，请检查`);
+			logger.error(`${service_name} 服务出现了问题，请检查`);
 			if(registerTable[service_name].errorNum > 3) {
 				delete registerTable[service_name];
-				console.error(`${service_name} 长时间未响应，已移除`);
+				logger.error(`${service_name} 长时间未响应，已移除`);
 			}
 		})
 	})
@@ -66,7 +67,7 @@ router.post('/register/:service_name', context=>{
 			configTable[service_name] = JSON.parse(configFileContent);
 		}
 		catch(error) {
-			console.error(`${service_name} 服务配置文件解析失败`);
+			logger.error(`${service_name} 服务配置文件解析失败`);
 			configTable[service_name] = {};
 		}
 	}
@@ -89,7 +90,7 @@ router.post('/config/:service_name', context=>{
 		body: configTable[service_name]
 	})
 	.catch(error=>{
-		console.error(`更新 ${service_name} 服务配置失败`);
+		logger.error(`更新 ${service_name} 服务配置失败`);
 	})
 })
 
@@ -139,6 +140,6 @@ router.all('*', async context=>{
 	context.response.body = ret;
 })
 
-app.use(logger()).use(bodyParser()).use(router.routes()).use(router.allowedMethods());
+app.use(koa_logger()).use(bodyParser()).use(router.routes()).use(router.allowedMethods());
 app.listen(3000);
 

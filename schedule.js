@@ -1,6 +1,6 @@
 const schedule = require('node-schedule');
 const fs = require('fs');
-const MicroService = require('../utils/createService');
+const MicroService = require('./utils/createService');
 
 var service = new MicroService('schedule');
 var router = service.router;
